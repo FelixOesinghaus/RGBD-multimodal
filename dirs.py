@@ -27,38 +27,57 @@ print("test")
 #paths, dirs, files = os.walk(os.getcwd()+ "\\" +"rgbd-dataset")
 
 paths, dirs, files = next(os.walk(os.getcwd()))
-main_crop_path = paths + "\\crop"
 
-os.mkdir(main_crop_path)
+### if crop does not exist, use create_crop_directory
 
-print("paths: ", paths)
-print("dirs: ",dirs)
-print("files: ", files)
+def create_crop_directory(paths, dirs, files):
+	main_crop_path = paths + "\\crop"
+	os.mkdir(main_crop_path)
+	print("paths: ", paths)
+	print("dirs: ",dirs)
+	print("files: ", files)
 
-for directory in dirs:
-    if "rgbd-dataset" in directory:
-        dataset_path = os.getcwd() + "\\" + directory
-        print(dataset_path)
+	for directory in dirs:
+		if "rgbd-dataset" in directory:
+			dataset_path = os.getcwd() + "\\" + directory
+			print(dataset_path)
 
-data_dir = pathlib.Path(dataset_path)
+	data_dir = pathlib.Path(dataset_path)
 
-paths, dirs, files = next(os.walk(dataset_path))
-print("paths: ", paths)
-print("dirs: ",dirs)
-print("files: ", files)
+	paths, dirs, files = next(os.walk(dataset_path))
+	print("paths: ", paths)
+	print("dirs: ",dirs)
+	print("files: ", files)
 
 
-for directory in dirs:
-	print(directory)
-	os.mkdir(main_crop_path +"\\"+ directory)
-	sub_path = paths + "\\" + directory
-	print(sub_path)
-	sub_data_dir = pathlib.Path(sub_path)
-	
-	subpaths, subdirs, subfiles = next(os.walk(sub_path)
-	print("subpaths: ", subpaths)
-	print("subdirs: ", subdirs)
-	print("subfiles: ", subfiles)
+	for directory in dirs:
+		print(directory)
+		os.mkdir(main_crop_path +"\\"+ directory)
+		sub_path = paths + "\\" + directory
+		print(sub_path)
+		sub_data_dir = pathlib.Path(sub_path)
+		
+		subpaths, subdirs, subfiles = next(os.walk(sub_path))
+		print("subpaths: ", subpaths)
+		print("subdirs: ", subdirs)
+		#print("subfiles: ", subfiles)
+		for subdirectory in subdirs:
+			sub_sub_path = sub_path + "\\" + subdirectory
+			print(sub_sub_path)
+			objectpaths, objectdirs, objectfiles = next(os.walk(sub_sub_path))
+			
+			object_pics = []
+			for file in objectfiles:
+				if "_crop.png" in file:
+					picpath = sub_sub_path + "\\" + file
+					object_pics.append(picpath)
+			print(len(object_pics))
+			current_path = "rgbd-dataset\\" + directory + "\\" + subdirectory
+			new_path = "crop\\" + directory
+			for pic in object_pics:
+				if "_crop.png" in pic:
+					Path(pic).rename(pic.replace(current_path, new_path, 1))
+
 
 	
 
