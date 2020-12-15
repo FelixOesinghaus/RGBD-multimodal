@@ -81,3 +81,33 @@ if Path.exists(Path(os.getcwd() + "\\crop")):
 else:
 	create_crop_directory(paths, dirs, files)
 
+batch_size = 32
+img_height = 180
+img_width = 180
+
+train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+	Path(os.getcwd() + "\\crop"),
+	validation_split=0.2,
+	subset="training",
+	seed=123,
+	image_size=(img_height, img_width),
+	batch_size=batch_size)
+
+val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+	Path(os.getcwd() + "\\crop"),
+	validation_split=0.2,
+	subset="validation",
+	seed=123,
+	image_size=(img_height, img_width),
+	batch_size=batch_size)
+
+class_names = train_ds.class_names
+
+# plt.figure(figsize=(10, 10))
+for images, labels in train_ds.take(1):
+	for i in range(9):
+		# ax = plt.subplot(3, 3, i + 1)
+		plt.imshow(images[i].numpy().astype("uint8"))
+		plt.title(class_names[labels[i]])
+		plt.axis("off")
+		plt.show()
