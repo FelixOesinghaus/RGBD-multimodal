@@ -26,15 +26,11 @@ print("test")
 
 #paths, dirs, files = os.walk(os.getcwd()+ "\\" +"rgbd-dataset")
 
-paths, dirs, files = next(os.walk(os.getcwd()))
-
-### if crop does not exist, use create_crop_directory
-
 def create_crop_directory(paths, dirs, files):
 	main_crop_path = paths + "\\crop"
 	os.mkdir(main_crop_path)
 	print("paths: ", paths)
-	print("dirs: ",dirs)
+	print("dirs: ", dirs)
 	print("files: ", files)
 
 	for directory in dirs:
@@ -46,13 +42,12 @@ def create_crop_directory(paths, dirs, files):
 
 	paths, dirs, files = next(os.walk(dataset_path))
 	print("paths: ", paths)
-	print("dirs: ",dirs)
+	print("dirs: ", dirs)
 	print("files: ", files)
-
 
 	for directory in dirs:
 		print(directory)
-		os.mkdir(main_crop_path +"\\"+ directory)
+		os.mkdir(main_crop_path + "\\" + directory)
 		sub_path = paths + "\\" + directory
 		print(sub_path)
 		sub_data_dir = pathlib.Path(sub_path)
@@ -79,6 +74,10 @@ def create_crop_directory(paths, dirs, files):
 					Path(pic).rename(pic.replace(current_path, new_path, 1))
 
 
-	
-
+paths, dirs, files = next(os.walk(os.getcwd()))
+# if crop does not exist, use create_crop_directory
+if Path.exists(Path(os.getcwd() + "\\crop")):
+	print("./crop existiert bereits.")
+else:
+	create_crop_directory(paths, dirs, files)
 
