@@ -7,8 +7,10 @@ import os
 import PIL
 import PIL.Image
 import tensorflow as tf
+import sys
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras import models
 from tensorflow.keras.models import Sequential
 # import tensorflow_datasets as tfds
 
@@ -84,101 +86,133 @@ if Path.exists(Path(os.getcwd() + "\\crop")):
 else:
 	create_crop_directory(paths, dirs, files)
 
-batch_size = 3
-img_height = 200
-img_width = 200
+args = 6
 
-train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-	Path(os.getcwd() + "\\crop"),
-	validation_split=0.2,
-	subset="training",
-	seed=123,
-	image_size=(img_height, img_width),
-	batch_size=batch_size)
+# model = Sequential()
 
-val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-	Path(os.getcwd() + "\\crop"),
-	validation_split=0.2,
-	subset="validation",
-	seed=123,
-	image_size=(img_height, img_width),
-	batch_size=batch_size)
+if args >= 0:
+	# +"\\saved_model_0"+str(args)+".pb"
+	Path(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb").\
+		rename(os.getcwd()+"\\saved-models\\saved_model.pb")
+	model = keras.models.load_model(Path(os.getcwd()))
+	Path(os.getcwd()+"\\saved-models\\saved_model.pb").\
+		rename(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb")
+	if Path(os.getcwd()+"\\saved-models\\saved_model.pb").exists():
+		os.remove(os.getcwd()+"\\saved-models\\saved_model.pb")
+	print("Modell geladen.")
+else:
+	batch_size = 3
+	img_height = 200
+	img_width = 200
 
-class_names = train_ds.class_names
+	train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+		Path(os.getcwd() + "\\crop"),
+		validation_split=0.2,
+		subset="training",
+		seed=123,
+		image_size=(img_height, img_width),
+		batch_size=batch_size)
 
-# plt.figure(figsize=(10, 10))
-# for images, labels in train_ds.take(1):
-# 	for i in range(9):
-# 		# ax = plt.subplot(3, 3, i + 1)
-# 		plt.imshow(images[i].numpy().astype("uint8"))
-# 		plt.title(class_names[labels[i]])
-# 		plt.axis("off")
-# 		plt.show()
+	val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+		Path(os.getcwd() + "\\crop"),
+		validation_split=0.2,
+		subset="validation",
+		seed=123,
+		image_size=(img_height, img_width),
+		batch_size=batch_size)
 
-normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
+	class_names = train_ds.class_names
 
-normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-image_batch, labels_batch = next(iter(normalized_ds))
-first_image = image_batch[0]
-# Notice the pixels values are now in `[0,1]`.
-# print(np.min(first_image), np.max(first_image))
-#
-# AUTOTUNE = tf.data.experimental.AUTOTUNE
-#
-# train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
-# val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+	# plt.figure(figsize=(10, 10))
+	# for images, labels in train_ds.take(1):
+	# 	for i in range(9):
+	# 		# ax = plt.subplot(3, 3, i + 1)
+	# 		plt.imshow(images[i].numpy().astype("uint8"))
+	# 		plt.title(class_names[labels[i]])
+	# 		plt.axis("off")
+	# 		plt.show()
 
-num_classes = len(class_names)
-# num_classes = 5
+	normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
 
-model = tf.keras.Sequential([
-	layers.experimental.preprocessing.Rescaling(1./255),
-	layers.Conv2D(3, 3, activation='relu'),
-	layers.MaxPooling2D(),
-	layers.Conv2D(3, 3, activation='relu'),
-	layers.MaxPooling2D(),
-	layers.Conv2D(3, 3, activation='relu'),
-	layers.MaxPooling2D(),
-	layers.Flatten(),
-	layers.Dense(9, activation='relu'),
-	layers.Dense(num_classes)
-])
+	normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
+	image_batch, labels_batch = next(iter(normalized_ds))
+	first_image = image_batch[0]
+	# Notice the pixels values are now in `[0,1]`.
+	# print(np.min(first_image), np.max(first_image))
+	#
+	# AUTOTUNE = tf.data.experimental.AUTOTUNE
+	#
+	# train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
+	# val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
-model.compile(
-	optimizer='adam',
-	loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
-	metrics=['accuracy'])
+	num_classes = len(class_names)
+	# num_classes = 5
 
-model.fit(
-	train_ds,
-	validation_data=val_ds,
-	epochs=500,
-	steps_per_epoch=20,
-	validation_steps=20
-)
+	model = tf.keras.Sequential([
+		layers.experimental.preprocessing.Rescaling(1./255),
+		layers.Conv2D(15, 7, activation='relu'),
+		layers.MaxPooling2D(),
+		layers.Conv2D(15, 7, activation='relu'),
+		layers.MaxPooling2D(),
+		layers.Conv2D(15, 7, activation='relu'),
+		layers.MaxPooling2D(),
+		layers.Flatten(),
+		layers.Dense(45, activation='softmax'),
+		layers.Dense(num_classes)
+	])
 
-model.save(os.getcwd())
+	model.compile(
+		optimizer='adam',
+		loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
+		metrics=['accuracy'])
 
-history = model.history
+	epochs = 100
+	steps_per_epoch = 138
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
+	if epochs * steps_per_epoch > 138 * 400:
+		print("Zu viele Epochenschritte für zu wenige Daten!", file=sys.stderr)
+		exit(-1)
 
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+	model.fit(
+		train_ds,
+		validation_data=val_ds,
+		epochs=epochs,
+		steps_per_epoch=steps_per_epoch,
+		validation_steps=100
+	)
 
-epochs_range = range(500)
+	model.save(os.getcwd())
+
+# history = model.history
+
+# acc = history.history['accuracy']
+# val_acc = history.history['val_accuracy']
+
+acc = model.history['accuracy']
+val_acc = model.history['val_accuracy']
+
+# loss = history.history['loss']
+# val_loss = history.history['val_loss']
+
+loss = model.history['loss']
+val_loss = model.history['val_loss']
+
+# epochs_range = range(epochs)
 
 plt.figure(figsize=(8, 8))
 plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+# plt.plot(epochs_range, acc, label='Training Accuracy')
+# plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+plt.plot(acc, label='Training Accuracy')
+plt.plot(val_acc, label='Validation Accuracy')
 plt.legend(loc='lower right')
 plt.title('Training and Validation Accuracy')
 
 plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
+# plt.plot(epochs_range, loss, label='Training Loss')
+# plt.plot(epochs_range, val_loss, label='Validation Loss')
+plt.plot(loss, label='Training Loss')
+plt.plot(val_loss, label='Validation Loss')
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.show()
