@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import pathlib
 from pathlib import Path
 import os
-import shutil
+# import shutil
 import PIL
 import PIL.Image
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
-import tensorflow_datasets as tfds
+# import tensorflow_datasets as tfds
 
 print(tf.__version__)
 
@@ -122,11 +122,11 @@ image_batch, labels_batch = next(iter(normalized_ds))
 first_image = image_batch[0]
 # Notice the pixels values are now in `[0,1]`.
 # print(np.min(first_image), np.max(first_image))
-
-AUTOTUNE = tf.data.experimental.AUTOTUNE
-
-train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
-val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+#
+# AUTOTUNE = tf.data.experimental.AUTOTUNE
+#
+# train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
+# val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
 num_classes = len(class_names)
 # num_classes = 5
