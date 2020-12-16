@@ -84,9 +84,9 @@ if Path.exists(Path(os.getcwd() + "\\crop")):
 else:
 	create_crop_directory(paths, dirs, files)
 
-batch_size = 32
-img_height = 180
-img_width = 180
+batch_size = 3
+img_height = 200
+img_width = 200
 
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	Path(os.getcwd() + "\\crop"),
@@ -133,14 +133,14 @@ num_classes = len(class_names)
 
 model = tf.keras.Sequential([
 	layers.experimental.preprocessing.Rescaling(1./255),
-	layers.Conv2D(32, 3, activation='relu'),
+	layers.Conv2D(3, 3, activation='relu'),
 	layers.MaxPooling2D(),
-	layers.Conv2D(32, 3, activation='relu'),
+	layers.Conv2D(3, 3, activation='relu'),
 	layers.MaxPooling2D(),
-	layers.Conv2D(32, 3, activation='relu'),
+	layers.Conv2D(3, 3, activation='relu'),
 	layers.MaxPooling2D(),
 	layers.Flatten(),
-	layers.Dense(128, activation='relu'),
+	layers.Dense(9, activation='relu'),
 	layers.Dense(num_classes)
 ])
 
@@ -152,7 +152,9 @@ model.compile(
 model.fit(
 	train_ds,
 	validation_data=val_ds,
-	epochs=3
+	epochs=500,
+	steps_per_epoch=20,
+	validation_steps=20
 )
 
 model.save(os.getcwd())
@@ -165,7 +167,7 @@ val_acc = history.history['val_accuracy']
 loss = history.history['loss']
 val_loss = history.history['val_loss']
 
-epochs_range = range(3)
+epochs_range = range(500)
 
 plt.figure(figsize=(8, 8))
 plt.subplot(1, 2, 1)
