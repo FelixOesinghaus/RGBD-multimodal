@@ -86,16 +86,16 @@ if Path.exists(Path(os.getcwd() + "\\crop")):
 else:
 	create_crop_directory(paths, dirs, files)
 
-args = 6
+args = 5
 
 # model = Sequential()
 
 if args >= 0:
 	# +"\\saved_model_0"+str(args)+".pb"
 	Path(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb").\
-		rename(os.getcwd()+"\\saved-models\\saved_model.pb")
+		rename(os.getcwd()+"\\saved_model.pb")
 	model = keras.models.load_model(Path(os.getcwd()))
-	Path(os.getcwd()+"\\saved-models\\saved_model.pb").\
+	Path(os.getcwd()+"\\saved_model.pb").\
 		rename(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb")
 	if Path(os.getcwd()+"\\saved-models\\saved_model.pb").exists():
 		os.remove(os.getcwd()+"\\saved-models\\saved_model.pb")
@@ -122,6 +122,8 @@ else:
 		batch_size=batch_size)
 
 	class_names = train_ds.class_names
+
+	print("--------------WHAT AM I DOING WITH MY LIFE?----------------")
 
 	# plt.figure(figsize=(10, 10))
 	# for images, labels in train_ds.take(1):
@@ -150,14 +152,14 @@ else:
 
 	model = tf.keras.Sequential([
 		layers.experimental.preprocessing.Rescaling(1./255),
-		layers.Conv2D(15, 7, activation='relu'),
+		layers.Conv2D(20, 21, activation='relu'),
 		layers.MaxPooling2D(),
-		layers.Conv2D(15, 7, activation='relu'),
+		layers.Conv2D(20, 21, activation='relu'),
 		layers.MaxPooling2D(),
-		layers.Conv2D(15, 7, activation='relu'),
+		layers.Conv2D(20, 21, activation='relu'),
 		layers.MaxPooling2D(),
 		layers.Flatten(),
-		layers.Dense(45, activation='softmax'),
+		layers.Dense(60, activation='softmax'),
 		layers.Dense(num_classes)
 	])
 
@@ -166,8 +168,8 @@ else:
 		loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
 		metrics=['accuracy'])
 
-	epochs = 100
-	steps_per_epoch = 138
+	epochs = 10
+	steps_per_epoch = 20
 
 	if epochs * steps_per_epoch > 138 * 400:
 		print("Zu viele Epochenschritte für zu wenige Daten!", file=sys.stderr)
@@ -178,24 +180,25 @@ else:
 		validation_data=val_ds,
 		epochs=epochs,
 		steps_per_epoch=steps_per_epoch,
-		validation_steps=100
+		use_multiprocessing=True,
+		validation_steps=50
 	)
 
 	model.save(os.getcwd())
 
-# history = model.history
+history = model.history
 
-# acc = history.history['accuracy']
-# val_acc = history.history['val_accuracy']
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
 
-acc = model.history['accuracy']
-val_acc = model.history['val_accuracy']
+# acc = model.history['accuracy']
+# val_acc = model.history['val_accuracy']
 
-# loss = history.history['loss']
-# val_loss = history.history['val_loss']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
 
-loss = model.history['loss']
-val_loss = model.history['val_loss']
+# loss = model.history['loss']
+# val_loss = model.history['val_loss']
 
 # epochs_range = range(epochs)
 
