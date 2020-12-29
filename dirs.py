@@ -86,22 +86,22 @@ if Path.exists(Path(os.getcwd() + "\\crop")):
 else:
 	create_crop_directory(paths, dirs, files)
 
-args = 5
-
-# model = Sequential()
+args = -1
 
 if args >= 0:
 	# +"\\saved_model_0"+str(args)+".pb"
 	Path(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb").\
 		rename(os.getcwd()+"\\saved_model.pb")
 	model = keras.models.load_model(Path(os.getcwd()))
+	# model.load_weights()
 	Path(os.getcwd()+"\\saved_model.pb").\
 		rename(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb")
 	if Path(os.getcwd()+"\\saved-models\\saved_model.pb").exists():
 		os.remove(os.getcwd()+"\\saved-models\\saved_model.pb")
 	print("Modell geladen.")
+
 else:
-	batch_size = 3
+	batch_size = 100
 	img_height = 200
 	img_width = 200
 
@@ -149,39 +149,57 @@ else:
 
 	num_classes = len(class_names)
 	# num_classes = 5
-
+	factor = 0.25
 	model = tf.keras.Sequential([
 		layers.experimental.preprocessing.Rescaling(1./255),
-		layers.Conv2D(20, 21, activation='relu'),
+		layers.Conv2D(16*factor, 3, activation='relu'),
+		#layers.MaxPooling2D(),
+		#layers.Activation('sigmoid'),
+		layers.Conv2D(32*factor, 3, activation='relu'),
 		layers.MaxPooling2D(),
-		layers.Conv2D(20, 21, activation='relu'),
+		layers.Activation('sigmoid'),
+		layers.Conv2D(64*factor, 3, activation='relu'),
+		#layers.Activation('sigmoid'),
+		#layers.MaxPooling2D(),
+		layers.Conv2D(128*factor, 3, activation='relu'),
 		layers.MaxPooling2D(),
-		layers.Conv2D(20, 21, activation='relu'),
+		layers.Dropout(.2),
+		layers.Activation('sigmoid'),
+		layers.Conv2D(256*factor, 3, activation='relu'),
+		#layers.Activation('sigmoid'),
+		#layers.MaxPooling2D(),
+		layers.Conv2D(512*factor, 3, activation='relu'),
 		layers.MaxPooling2D(),
+		layers.Activation('sigmoid'),
 		layers.Flatten(),
-		layers.Dense(60, activation='softmax'),
+		layers.Flatten(),
+		layers.Dense(1024*factor, activation='softmax'),
+		layers.Softmax(),
 		layers.Dense(num_classes)
 	])
 
 	model.compile(
-		optimizer='adam',
+		optimizer='adagrad',
 		loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
 		metrics=['accuracy'])
 
-	epochs = 10
-	steps_per_epoch = 20
+	epochs = 7
+	steps_per_epoch = 10
 
-	if epochs * steps_per_epoch > 138 * 400:
-		print("Zu viele Epochenschritte für zu wenige Daten!", file=sys.stderr)
-		exit(-1)
+	# if epochs * steps_per_epoch > 138 * 400:
+	# 	print("Zu viele Epochenschritte für zu wenige Daten!", file=sys.stderr)
+	# 	exit(-1)
+	#
 
+	train_ds.repeat()
+	val_ds.repeat()
 	model.fit(
 		train_ds,
 		validation_data=val_ds,
 		epochs=epochs,
 		steps_per_epoch=steps_per_epoch,
 		use_multiprocessing=True,
-		validation_steps=50
+		validation_steps=25
 	)
 
 	model.save(os.getcwd())
@@ -219,4 +237,3 @@ plt.plot(val_loss, label='Validation Loss')
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.show()
-
