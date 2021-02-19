@@ -104,7 +104,6 @@ train_datagen = ImageDataGenerator(
 	fill_mode='nearest'
 )
 validation_datagen = ImageDataGenerator(rescale=1.0/255)
-test_datagen = ImageDataGenerator(rescale=1.0/255)
 
 train_generator = train_datagen.flow_from_directory(
 	'train',
@@ -115,14 +114,14 @@ train_generator = train_datagen.flow_from_directory(
 	class_mode='categorical')
 	
 validation_generator = validation_datagen.flow_from_directory(
-	'validation',
+	'test',
 	target_size=(img_height,img_width),
 	batch_size=batch_size,
 	shuffle=True,
 	seed=123,
 	class_mode='categorical')	
 	
-test_generator = test_datagen.flow_from_directory(
+test_generator = validation_datagen.flow_from_directory(
 	'test',
 	target_size=(img_height,img_width),
 	batch_size=batch_size,
@@ -140,10 +139,10 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	image_size=(img_height, img_width),
 	batch_size=batch_size)
 
-val_ds_steps = int(val_ds.cardinality() - 1)
-normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
+#val_ds_steps = int(val_ds.cardinality() - 1)
+#normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
 
-normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
+#normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
 #normalized_val_ds = normalized_val_ds.repeat()
 
@@ -245,9 +244,11 @@ else:
 		#layers.MaxPooling2D(),
 		#layers.Activation('sigmoid'),
 		layers.Flatten(),
-		tf.keras.layers.Dropout(0.30),
 		#layers.Flatten(),
+		layers.Dense(1024, activation='relu', kernel_regularizer="l2"),
+		layers.Dropout(0.30), 
 		layers.Dense(1024, activation='relu'),
+		layers.Dropout(0.10), 
 		#layers.Softmax(),
 		layers.Dense(num_classes)
 	])
@@ -258,19 +259,19 @@ else:
 		loss='categorical_crossentropy',
 		metrics=['accuracy'])
 
-	epochs = 3
+	epochs = 6
 	
 	faster_steps = train_steps // 4
 	
 	#csv_logger = CSVLogger('training.log', separator=',', append=False)
 	#csv_logger_test = CSVLogger('test.log', separator=',', append=False)
 	#validation_data=validation_generator,
-	model.fit(
+	model.fit_generator(
 		train_generator,
 		steps_per_epoch=faster_steps,
 		epochs=epochs,
-		validation_data=normalized_val_ds,
-		validation_steps=val_ds_steps
+		validation_data=validation_generator,
+		validation_steps=validation_steps
 	)
 
 	model.save(
@@ -284,6 +285,21 @@ else:
 	)
 model.summary()
 
+loss, acc = model.evaluate_generator(validation_generator,
+                                     steps=math.ceil(validation_generator.samples / batch_size),
+                                     verbose=0,
+                                     workers=1)
+
+y_pred = model.predict_generator(validation_generator,
+                                 steps=math.ceil(validation_generator.samples / batch_size),
+                                 verbose=0,
+                                 workers=1)
+
+y_pred = np.argmax(y_pred, axis=-1)
+y_test = validation_generator.classes[validation_generator.index_array]
+
+print('loss: ', loss, 'accuracy: ', acc) # loss:  0.47286026436090467 accuracy:  0.864
+print('accuracy_score: ', accuracy_score(y_test, y_pred)) # accuracy_score:  0.095
 	
 #loss, acc = model.evaluate_generator(train_generator, steps=train_steps, verbose=1)
 #print('Training data  -> loss: %.3f, acc: %.3f' % (loss, acc))
