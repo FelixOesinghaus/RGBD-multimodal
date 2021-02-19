@@ -1,3 +1,9 @@
 rgbd-dataset/
-crop/
+test/
+train/
 depthcrop/
+test_folder/
+validation/
+depthcrop/
+saved_model/
+
