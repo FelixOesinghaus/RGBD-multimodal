@@ -23,7 +23,7 @@ import glob
 
 
 #args = -1
-batch_size = 4
+batch_size = 128
 img_height = 200
 img_width = 200
 
@@ -97,10 +97,9 @@ def display_sample(sample_images, sample_labels, sample_predictions=None, num_ro
 
 train_datagen = ImageDataGenerator(
 	rescale=1.0/255,
-	height_shift_range=0.1,
-	width_shift_range=0.1,
+	height_shift_range=0.2,
+	width_shift_range=0.2,
 	rotation_range=20,
-	brightness_range=[0.8,1.0],
 	horizontal_flip=True,
 	fill_mode='nearest'
 )
@@ -132,6 +131,21 @@ test_generator = test_datagen.flow_from_directory(
 	class_mode=None)	
 
 
+val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+	Path(os.getcwd() + "\\validation"),
+	labels="inferred",
+	validation_split=0.2,
+	subset="validation",
+	seed=123,
+	image_size=(img_height, img_width),
+	batch_size=batch_size)
+
+val_ds_steps = int(val_ds.cardinality() - 1)
+normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
+
+normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
+
+#normalized_val_ds = normalized_val_ds.repeat()
 
 train_steps = train_generator.n // batch_size
 validation_steps = validation_generator.n // batch_size
@@ -141,15 +155,12 @@ print('Training set size %d, step-size %d' % (train_generator.n, train_steps))
 print('Validation set size %d, step-size %d' % (validation_generator.n, validation_steps))
 print('Test set size %d, step-size %d' % (test_generator.n, test_steps))
 
-images, labels = train_generator.next()
+#images, labels = train_generator.next()
 #print(labels)
 #print(images)
-labels = np.argmax(labels, axis=1)
-print(labels)
-display_sample(images[:4], labels[:4], num_rows=2, num_cols=2, 
-               plot_title='Sample Training Data', fig_size=(16,20))
-
-sys.exit()
+#labels = np.argmax(labels, axis=1)
+#print(labels)
+#display_sample(images[:16], labels[:16], num_rows=4, num_cols=4, plot_title='Sample Training Data', fig_size=(16,20))
 
 if Path.exists(Path(os.getcwd() + "\\generator_saved_model")):
 	print("./generator_saved_model existiert bereits.")
@@ -234,6 +245,7 @@ else:
 		#layers.MaxPooling2D(),
 		#layers.Activation('sigmoid'),
 		layers.Flatten(),
+		tf.keras.layers.Dropout(0.30),
 		#layers.Flatten(),
 		layers.Dense(1024, activation='relu'),
 		#layers.Softmax(),
@@ -252,14 +264,13 @@ else:
 	
 	#csv_logger = CSVLogger('training.log', separator=',', append=False)
 	#csv_logger_test = CSVLogger('test.log', separator=',', append=False)
-	
-	model.fit_generator(
+	#validation_data=validation_generator,
+	model.fit(
 		train_generator,
 		steps_per_epoch=faster_steps,
 		epochs=epochs,
-		validation_data=validation_generator,
-		validation_steps=validation_steps,
-		workers = 3
+		validation_data=normalized_val_ds,
+		validation_steps=val_ds_steps
 	)
 
 	model.save(
@@ -274,12 +285,12 @@ else:
 model.summary()
 
 	
-loss, acc = model.evaluate_generator(train_generator, steps=train_steps, verbose=1)
-print('Training data  -> loss: %.3f, acc: %.3f' % (loss, acc))
-loss, acc = model.evaluate_generator(validation_generator, steps=validation_steps, verbose=1)
-print('Cross-val data -> loss: %.3f, acc: %.3f' % (loss, acc))
-loss, acc = model.evaluate_generator(test_generator, steps=test_steps, verbose=1)
-print('Testing data   -> loss: %.3f, acc: %.3f' % (loss, acc))
+#loss, acc = model.evaluate_generator(train_generator, steps=train_steps, verbose=1)
+#print('Training data  -> loss: %.3f, acc: %.3f' % (loss, acc))
+#loss, acc = model.evaluate_generator(validation_generator, steps=validation_steps, verbose=1)
+#print('Cross-val data -> loss: %.3f, acc: %.3f' % (loss, acc))
+#loss, acc = model.evaluate_generator(test_generator, steps=test_steps, verbose=1)
+#print('Testing data   -> loss: %.3f, acc: %.3f' % (loss, acc))
 
 all_predictions, all_labels = [], []
 for i in range(test_steps):

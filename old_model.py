@@ -222,6 +222,7 @@ else:
 	num_classes = len(class_names)
 	# num_classes = 5
 	#factor = 0.5
+	#regularizer = contrib.layers.l2_regularizer(scale=0.1)
 	model = tf.keras.Sequential([
 		layers.experimental.preprocessing.Rescaling(1./255),
 		#layers.Conv2D(16*factor, 3, activation='relu'),
@@ -237,6 +238,10 @@ else:
 		layers.MaxPooling2D(),
 		layers.Conv2D(256, 3, activation='relu'),
 		layers.MaxPooling2D(),
+		layers.Dropout(0.10), 
+		layers.Dense(1024, activation='relu', kernel_regularizer="l2"),
+		layers.MaxPooling2D(),
+		layers.Dropout(0.10), 
 		#layers.Dropout(.2),
 		#layers.Activation('sigmoid'),
 		#layers.Conv2D(128, 3, activation='relu'),
@@ -245,17 +250,18 @@ else:
 		#layers.Activation('sigmoid'),
 		layers.Flatten(),
 		#layers.Flatten(),
-		layers.Dense(1024, activation='relu'),
+		layers.Dense(1024, activation='relu', kernel_regularizer="l2"),
+		layers.Dropout(0.10), 
 		#layers.Softmax(),
 		layers.Dense(num_classes)
 	])
-
+	
 	model.compile(
 		optimizer='adam',
 		loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
 		metrics=['accuracy'])
 
-	epochs = 5
+	epochs = 15
 	#steps_per_epoch = 10
 
 	# if epochs * steps_per_epoch > 138 * 400:
@@ -267,7 +273,7 @@ else:
 	csv_logger = CSVLogger('training.log', separator=',', append=False)
 	#csv_logger_test = CSVLogger('test.log', separator=',', append=False)
 	
-	model.fit(
+	history = model.fit(
 		train_ds,
 		validation_data=val_ds,
 		callbacks=[csv_logger],
@@ -277,6 +283,17 @@ else:
 		
 		
 	)
+	print("loss:",history.history['loss'])
+	print("accuracy:",history.history['accuracy'])
+	print("val_loss:",history.history['val_loss'])
+	print("val_accuracy:",history.history['val_accuracy'])
+	plt.plot(history.history['loss'])
+	plt.plot(history.history['val_loss'])
+	plt.title('model train vs validation loss')
+	plt.ylabel('loss')
+	plt.xlabel('epoch')
+	plt.legend(['train', 'validation'], loc='upper right')
+	plt.show()
 	#steps_per_epoch= 1000,,
 	#use_multiprocessing=True
 	#validation_steps= 1000
@@ -399,7 +416,7 @@ for i in range(len(object_categories)):
 #print('  - Predictions: ', all_predictions[:25])
 correct_pred_count = (all_labels == all_predictions).sum()
 test_acc = correct_pred_count / len(all_labels)
-print('We got %d of %d correct (or %.3f accuracy)' % (correct_pred_count, len(all_labels), test_acc))
+print('\n We got %d of %d correct (or %.3f accuracy)' % (correct_pred_count, len(all_labels), test_acc))
 #loss, acc = model.evaluate(test_ds, steps=test_steps, verbose=1)
 #print('Testing data   -> loss: %.3f, acc: %.3f' % (loss, acc))
 
@@ -415,8 +432,8 @@ nd_images = images.numpy()
 predict_labels = model.predict(images)
 predict_labels = np.argmax(predict_labels, axis=1)
 
-print("\n Actual label index:\n", nd_labels)
-print("\n Predicted label index:\n", predict_labels)
+#print("\n Actual label index:\n", nd_labels)
+#print("\n Predicted label index:\n", predict_labels)
 
 # display sample predictions
 
@@ -431,13 +448,13 @@ display_sample(nd_images[:64], nd_labels[:64], sample_predictions=predict_labels
 
 #score = model.evaluate(test_ds,verbose=1)
 #print(score)
-	
-#loss, acc = model.evaluate(train_ds, steps=train_steps, verbose=1)
-#print('Training data  -> loss: %.3f, acc: %.3f' % (loss, acc))
-#loss, acc = model.evaluate(val_ds, steps=validation_steps, verbose=1)
-#print('Cross-val data -> loss: %.3f, acc: %.3f' % (loss, acc))
-#loss, acc = model.evaluate(test_ds, steps=test_steps, verbose=1)
-#print('Testing data   -> loss: %.3f, acc: %.3f' % (loss, acc))
+print()
+loss, acc = model.evaluate(train_ds, steps=train_steps, verbose=1)
+print('Training data  -> loss: %.3f, acc: %.3f' % (loss, acc))
+loss, acc = model.evaluate(val_ds, steps=validation_steps, verbose=1)
+print('Cross-val data -> loss: %.3f, acc: %.3f' % (loss, acc))
+loss, acc = model.evaluate(test_ds, steps=test_steps, verbose=1)
+print('Testing data   -> loss: %.3f, acc: %.3f' % (loss, acc))
 
 
 #labels = ['G1', 'G2', 'G3', 'G4', 'G5']

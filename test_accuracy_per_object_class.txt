@@ -1,0 +1,61 @@
+Per object accuracy:
+apple  accuracy:  0.7451737451737451
+ball  accuracy:  0.947075208913649
+banana  accuracy:  1.0
+bell_pepper  accuracy:  0.9386503067484663
+binder  accuracy:  1.0
+bowl  accuracy:  1.0
+calculator  accuracy:  1.0
+camera  accuracy:  0.8859060402684564
+cap  accuracy:  1.0
+cell_phone  accuracy:  0.974
+cereal_box  accuracy:  0.9259259259259259
+coffee_mug  accuracy:  1.0
+comb  accuracy:  0.872
+dry_battery  accuracy:  0.8634538152610441
+flashlight  accuracy:  0.8576642335766423
+food_bag  accuracy:  1.0
+food_box  accuracy:  1.0
+food_can  accuracy:  1.0
+food_cup  accuracy:  1.0
+food_jar  accuracy:  0.9663461538461539
+garlic  accuracy:  1.0
+glue_stick  accuracy:  1.0
+greens  accuracy:  1.0
+hand_towel  accuracy:  1.0
+instant_noodles  accuracy:  0.9712351945854484
+keyboard  accuracy:  1.0
+kleenex  accuracy:  1.0
+lemon  accuracy:  1.0
+lightbulb  accuracy:  1.0
+lime  accuracy:  1.0
+marker  accuracy:  1.0
+mushroom  accuracy:  0.9179487179487179
+notebook  accuracy:  1.0
+onion  accuracy:  1.0
+orange  accuracy:  1.0
+peach  accuracy:  1.0
+pear  accuracy:  1.0
+pitcher  accuracy:  1.0
+plate  accuracy:  1.0
+pliers  accuracy:  1.0
+potato  accuracy:  1.0
+rubber_eraser  accuracy:  1.0
+scissors  accuracy:  1.0
+shampoo  accuracy:  0.9444444444444444
+soda_can  accuracy:  1.0
+sponge  accuracy:  1.0
+stapler  accuracy:  1.0
+tomato  accuracy:  1.0
+toothbrush  accuracy:  1.0
+toothpaste  accuracy:  1.0
+water_bottle  accuracy:  0.9669260700389105
+
+We got 16823 of 17152 correct (or 0.981 accuracy)
+
+969/969 [==============================] - 387s 397ms/step - loss: 0.3720 - accuracy: 0.9846
+Training data  -> loss: 0.372, acc: 0.985
+242/242 [==============================] - 93s 376ms/step - loss: 0.3753 - accuracy: 0.9847
+Cross-val data -> loss: 0.375, acc: 0.985
+134/134 [==============================] - 69s 497ms/step - loss: 0.3730 - accuracy: 0.9843
+Testing data   -> loss: 0.373, acc: 0.984
