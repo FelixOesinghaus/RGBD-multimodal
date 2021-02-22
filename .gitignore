@@ -6,4 +6,5 @@ test_folder/
 validation/
 depthcrop/
 saved_model/
+generator_saved_model/
 
