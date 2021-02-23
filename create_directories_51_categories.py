@@ -40,7 +40,7 @@ def create_train_directory(paths, dirs, files):
 
 	for directory in dirs:
 		print(directory)
-		#os.mkdir(main_train_path + "\\" + directory)
+		os.mkdir(main_train_path + "\\" + directory)
 		sub_path = paths + "\\" + directory
 		print(sub_path)
 		sub_data_dir = pathlib.Path(sub_path)
@@ -50,7 +50,6 @@ def create_train_directory(paths, dirs, files):
 		print("subdirs: ", subdirs)
 		#print("subfiles: ", subfiles)
 		for subdirectory in subdirs:
-			os.mkdir(main_train_path  + "\\" + subdirectory )
 			sub_sub_path = sub_path + "\\" + subdirectory
 			print(sub_sub_path)
 			objectpaths, objectdirs, objectfiles = next(os.walk(sub_sub_path))
@@ -62,7 +61,7 @@ def create_train_directory(paths, dirs, files):
 					object_pics.append(picpath)
 			print(len(object_pics))
 			current_path = "rgbd-dataset\\" + directory + "\\" + subdirectory
-			new_path = "train\\" + subdirectory
+			new_path = "train\\" + directory
 			for pic in object_pics:
 				if "_crop.png" in pic:
 					Path(pic).rename(pic.replace(current_path, new_path, 1))
@@ -99,7 +98,6 @@ def create_test_directory(paths, dirs, files):
 		
 		for i in random.sample(object_pics,ten_percent):
 			Path(i).rename(i.replace(current_path, new_path, 1))
-		
 		
 		
 def create_val_directory(paths, dirs, files):
@@ -145,7 +143,7 @@ else:
 	create_train_directory(paths, dirs, files)
 
 
-# if test does not exist, use create_test_directory
+# if test does not exist, use create_train_directory
 if Path.exists(Path(os.getcwd() + "\\test")):
 	print("./test existiert bereits.")
 else:
@@ -153,8 +151,8 @@ else:
 
 
 # if validation does not exist, use create_train_directory
-#if Path.exists(Path(os.getcwd() + "\\validation")):
-#	print("./validation existiert bereits.")
-#else:
-#	create_val_directory(paths, dirs, files)
+if Path.exists(Path(os.getcwd() + "\\validation")):
+	print("./validation existiert bereits.")
+else:
+	create_val_directory(paths, dirs, files)
 

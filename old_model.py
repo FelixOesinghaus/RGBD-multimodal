@@ -15,6 +15,7 @@ from tensorflow.keras import models
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.callbacks import CSVLogger
 import pandas as pd
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 # import tensorflow_datasets as tfds
 import seaborn as sns
 import glob
@@ -38,6 +39,34 @@ object_category_names = sorted(os.listdir('train'))
 object_categories = {}
 for i, name in enumerate(object_category_names):
     object_categories[i] = name
+
+
+#result = object_categories.items() 
+#data = list(result) 
+
+#object_labels_two = np.array(data)
+object_labels_two = np.delete(np.array(list(object_categories.items())),0,1)
+object_labels = object_labels_two.reshape(len(object_categories),)
+
+print(type(object_categories))
+print(object_categories)
+print()
+print(len(object_categories))
+
+#print(type(object_labels_two))
+#print(object_labels_two)
+#print(object_labels_two.shape)
+
+
+
+
+print(object_labels)
+print(object_labels.shape)
+
+
+#sys.exit()
+
+
 
 
 
@@ -109,6 +138,7 @@ img_width = 200
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	Path(os.getcwd() + "\\train"),
 	labels="inferred",
+	color_mode='grayscale',
 	validation_split=0.2,
 	subset="training",
 	seed=123,
@@ -118,6 +148,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	Path(os.getcwd() + "\\train"),
 	labels="inferred",
+	color_mode='grayscale',
 	validation_split=0.2,
 	subset="validation",
 	seed=123,
@@ -128,6 +159,7 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 test_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	Path(os.getcwd() + "\\test"),
 	labels="inferred",
+	color_mode='grayscale',
 	seed=123,
 	shuffle=True,
 	image_size=(img_height, img_width),
@@ -136,7 +168,7 @@ test_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	
 #train_elements = 168457
 #train_elements = 170326
-train_elements = 136261
+#train_elements = 136261
 #val_elements = 34065
 #test_elements = 20767
 #test_elements = 20767
@@ -168,7 +200,7 @@ nd_labels = labels.numpy()
 nd_images = images.numpy()
 #labels = np.argmax(labels, axis=1)
 
-#display_sample(nd_images[:16], nd_labels[:16], num_rows=4, num_cols=4, plot_title='Sample Training Data', fig_size=(16,20))
+display_sample(nd_images[:16], nd_labels[:16], num_rows=4, num_cols=4, plot_title='Sample Training Data', fig_size=(16,20))
 
 if Path.exists(Path(os.getcwd() + "\\saved_model")):
 	print("./saved_model existiert bereits.")
@@ -283,17 +315,7 @@ else:
 		
 		
 	)
-	print("loss:",history.history['loss'])
-	print("accuracy:",history.history['accuracy'])
-	print("val_loss:",history.history['val_loss'])
-	print("val_accuracy:",history.history['val_accuracy'])
-	plt.plot(history.history['loss'])
-	plt.plot(history.history['val_loss'])
-	plt.title('model train vs validation loss')
-	plt.ylabel('loss')
-	plt.xlabel('epoch')
-	plt.legend(['train', 'validation'], loc='upper right')
-	plt.show()
+
 	#steps_per_epoch= 1000,,
 	#use_multiprocessing=True
 	#validation_steps= 1000
@@ -354,7 +376,7 @@ plt.title('Training and Validation Loss')
 plt.show()
 
 model.summary()
-
+plt.clf()
 #images, labels = iter(test_ds).next()
 #predict_labels = model.predict(images)
 #predict_labels = np.argmax(predict_labels, axis=1)
@@ -389,26 +411,47 @@ for i in range(test_steps):
 	all_predictions.extend(predict_labels)
 	all_labels.extend(nd_labels)
 
+
 all_labels = np.array(all_labels)
 all_predictions = np.array(all_predictions)
-#np.savetxt("test_labels.csv", all_labels, delimiter=',')
+#np.savetxt("test_labels.csv", all_labels, delimiter=',')test_steps
 #np.savetxt("test_predictions.csv", all_predictions, delimiter=',')
-	
 
-number_of_samples = np.zeros((len(object_categories),), dtype=int)
-wrong_labels = np.zeros((len(object_categories),), dtype=int)
-accuracies = np.zeros((len(object_categories),), dtype=int)
-for i in range(len(all_labels)):
-	number_of_samples[all_labels[i]] += 1
-	if all_labels[i] != all_predictions[i]:
-		wrong_labels[all_labels[i]] +=1
+def int_label_to_string(x):
+  return object_labels[x]
 
 
-print("Per object accuracy:")
+
+print("\n Confusion Matrix:")
+cm = confusion_matrix(int_label_to_string(all_labels),int_label_to_string(all_predictions), labels=object_labels,normalize='true')
+np.savetxt("cm.csv", cm, delimiter=",")
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=object_labels)
+#plt.figure(figsize=(10, 10))
+disp.plot(xticks_rotation='vertical') 
+for labels in disp.text_.ravel():
+    labels.set_fontsize(6)
+
+#plt.savefig('confusion_matrix.png',dpi=300)
+#plt.show()
+
+
+#number_of_samples = np.zeros((len(object_categories),), dtype=np.uint64)
+#wrong_labels = np.zeros((len(object_categories),), dtype=np.uint64)
+#accuracies = np.zeros((len(object_categories),), dtype=np.uint64)
+#for i in range(len(all_labels)):
+#	number_of_samples[all_labels[i]] += 1
+#	if all_labels[i] != all_predictions[i]:
+#		wrong_labels[all_labels[i]] +=1
+
+
+#print("Per object accuracy:")
 for i in range(len(object_categories)):
-	correct_amount = number_of_samples[i] - wrong_labels[i]
-	accuracies[i] = correct_amount / number_of_samples[i]
-	print(object_categories[i]," accuracy: ", correct_amount / number_of_samples[i])
+#	correct_amount = number_of_samples[i] - wrong_labels[i]
+#	accuracies[i] = correct_amount / number_of_samples[i]
+#	print(object_categories[i]," accuracy: ", correct_amount / number_of_samples[i])
+	print(object_categories[i]," accuracy: ", cm[i,i])
+
+
 
 #print("Most mismatches :",object_categories[np.argmax(wrong_labels)])
 #print('First 25 results:')
