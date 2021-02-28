@@ -4,7 +4,7 @@ import pathlib
 from pathlib import Path
 import os
 import random
-# import shutil
+
 import PIL
 import PIL.Image
 import tensorflow as tf
@@ -21,20 +21,7 @@ import seaborn as sns
 import glob
 print(tf.__version__)
 
-print("test")
 
-# dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
-# data_dir = tf.keras.utils.get_file(origin=dataset_url,
-#                                   fname='flower_photos',
-#                                   untar=True)
-
-#print(os.getcwd())
-
-#print(data_dir)
-
-#paths, dirs, files = next(os.walk(os.getcwd()))
-
-#paths, dirs, files = os.walk(os.getcwd()+ "\\" +"rgbd-dataset")
 object_category_names = sorted(os.listdir('train'))
 object_categories = {}
 for i, name in enumerate(object_category_names):
@@ -48,25 +35,8 @@ for i, name in enumerate(object_category_names):
 object_labels_two = np.delete(np.array(list(object_categories.items())),0,1)
 object_labels = object_labels_two.reshape(len(object_categories),)
 
-print(type(object_categories))
-print(object_categories)
-print()
-print(len(object_categories))
-
-#print(type(object_labels_two))
-#print(object_labels_two)
-#print(object_labels_two.shape)
-
-
-
 
 print(object_labels)
-print(object_labels.shape)
-
-
-#sys.exit()
-
-
 
 
 
@@ -138,7 +108,7 @@ img_width = 200
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	Path(os.getcwd() + "\\train"),
 	labels="inferred",
-	color_mode='grayscale',
+	color_mode='rgb',
 	validation_split=0.2,
 	subset="training",
 	seed=123,
@@ -148,7 +118,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
 val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	Path(os.getcwd() + "\\train"),
 	labels="inferred",
-	color_mode='grayscale',
+	color_mode='rgb',
 	validation_split=0.2,
 	subset="validation",
 	seed=123,
@@ -159,23 +129,13 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 test_ds = tf.keras.preprocessing.image_dataset_from_directory(
 	Path(os.getcwd() + "\\test"),
 	labels="inferred",
-	color_mode='grayscale',
+	color_mode='rgb',
 	seed=123,
 	shuffle=True,
 	image_size=(img_height, img_width),
 	batch_size=batch_size)
 
 	
-#train_elements = 168457
-#train_elements = 170326
-#train_elements = 136261
-#val_elements = 34065
-#test_elements = 20767
-#test_elements = 20767
-
-#train_steps = train_elements // batch_size
-#validation_steps = val_elements // batch_size
-#test_steps = test_elements // batch_size
 
 train_steps = int(train_ds.cardinality() - 1)
 validation_steps = int(val_ds.cardinality() - 1)
@@ -204,15 +164,6 @@ display_sample(nd_images[:16], nd_labels[:16], num_rows=4, num_cols=4, plot_titl
 
 if Path.exists(Path(os.getcwd() + "\\saved_model")):
 	print("./saved_model existiert bereits.")
-	# +"\\saved_model_0"+str(args)+".pb"
-	#Path(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb").\
-	#	rename(os.getcwd()+"\\saved_model.pb")
-	#model = keras.models.load_model(Path(os.getcwd()))
-	# model.load_weights()
-	#Path(os.getcwd()+"\\saved_model.pb").\
-	#	rename(os.getcwd()+"\\saved-models\\saved_model_0"+str(args)+".pb")
-	#if Path(os.getcwd()+"\\saved-models\\saved_model.pb").exists():
-	#	os.remove(os.getcwd()+"\\saved-models\\saved_model.pb")
 	model = tf.keras.models.load_model('Q:/rgbd-data/RGBD multimodal/saved_model')
 
 	print("Modell geladen.")
@@ -220,22 +171,6 @@ if Path.exists(Path(os.getcwd() + "\\saved_model")):
 
 
 else:
-
-
-	#N_VALIDATION = int(num_elements * 0.2)
-	#N_TRAIN = int(num_elements * 0.8)
-	#print("\n",train_ds.__len__(),"\n")
-	#val_ds = packed_ds.take(N_VALIDATION).repeat()
-	#train_ds = packed_ds.skip(N_VALIDATION).take(N_TRAIN).repeat()
-	
-	# plt.figure(figsize=(10, 10))
-	# for images, labels in train_ds.take(1):
-	# 	for i in range(9):
-	# 		# ax = plt.subplot(3, 3, i + 1)
-	# 		plt.imshow(images[i].numpy().astype("uint8"))
-	# 		plt.title(class_names[labels[i]])
-	# 		plt.axis("off")
-	# 		plt.show()
 	
 	print(class_names)
 	normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
@@ -294,13 +229,6 @@ else:
 		metrics=['accuracy'])
 
 	epochs = 15
-	#steps_per_epoch = 10
-
-	# if epochs * steps_per_epoch > 138 * 400:
-	# 	print("Zu viele Epochenschritte für zu wenige Daten!", file=sys.stderr)
-	# 	exit(-1)
-	#
-
 	faster_steps = train_steps // 4
 	csv_logger = CSVLogger('training.log', separator=',', append=False)
 	#csv_logger_test = CSVLogger('test.log', separator=',', append=False)
@@ -316,10 +244,6 @@ else:
 		
 	)
 
-	#steps_per_epoch= 1000,,
-	#use_multiprocessing=True
-	#validation_steps= 1000
-	#validation_steps=25
 	model.save(
 		'Q:/rgbd-data/RGBD multimodal/saved_model',
 		overwrite=True,
@@ -344,17 +268,9 @@ else:
 	acc = history.history['accuracy']
 	val_acc = history.history['val_accuracy']
 
-# acc = model.history['accuracy']
-# val_acc = model.history['val_accuracy']
-
 	loss = history.history['loss']
 	val_loss = history.history['val_loss']
 	
-
-# loss = model.history['loss']
-# val_loss = model.history['val_loss']
-
-# epochs_range = range(epochs)
 
 
 plt.figure(figsize=(8, 8))
@@ -377,22 +293,7 @@ plt.show()
 
 model.summary()
 plt.clf()
-#images, labels = iter(test_ds).next()
-#predict_labels = model.predict(images)
-#predict_labels = np.argmax(predict_labels, axis=1)
 
-#nd_labels = labels.numpy()
-#nd_images = images.numpy()
-#wrong_labels = 0
-#for i in range(len(nd_labels)):
-#	if nd_labels[i] != predict_labels[i]:
-#		wrong_labels +=1
-	
-#print("\n Amount of wrong labels :",wrong_labels)
-#print(predict_labels)
-
-#print("\n Actual label index:\n", nd_labels)
-#print("\n Predicted label index:\n", predict_labels)
 all_predictions, all_labels = [], []
 #all_predictions = np.empty(test_steps * batch_size, dtype=np.int)
 #all_labels = np.empty(test_steps * batch_size, dtype=np.int)
@@ -431,7 +332,7 @@ disp.plot(xticks_rotation='vertical')
 for labels in disp.text_.ravel():
     labels.set_fontsize(6)
 
-#plt.savefig('confusion_matrix.png',dpi=300)
+plt.savefig('confusion_matrix.png',dpi=300)
 #plt.show()
 
 
@@ -453,10 +354,6 @@ for i in range(len(object_categories)):
 
 
 
-#print("Most mismatches :",object_categories[np.argmax(wrong_labels)])
-#print('First 25 results:')
-#print('  - Actuals    : ', all_labels[:25])
-#print('  - Predictions: ', all_predictions[:25])
 correct_pred_count = (all_labels == all_predictions).sum()
 test_acc = correct_pred_count / len(all_labels)
 print('\n We got %d of %d correct (or %.3f accuracy)' % (correct_pred_count, len(all_labels), test_acc))
@@ -498,11 +395,5 @@ loss, acc = model.evaluate(val_ds, steps=validation_steps, verbose=1)
 print('Cross-val data -> loss: %.3f, acc: %.3f' % (loss, acc))
 loss, acc = model.evaluate(test_ds, steps=test_steps, verbose=1)
 print('Testing data   -> loss: %.3f, acc: %.3f' % (loss, acc))
-
-
-#labels = ['G1', 'G2', 'G3', 'G4', 'G5']
-#ones = np.ones(len(object_categories))
-
-
 
 
